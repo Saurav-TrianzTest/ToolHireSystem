@@ -96,20 +96,32 @@ namespace ToolHireSystem
             }
             if (eMailChk.IsMatch(email))
             {
-                string emailToLower = email.ToLower();
-                string inIn = "Select e_mail from Customer where e_mail = '" + emailToLower + "'";
-                SqlConnection databaseConnection = new(DBConnect.oradb);
-                SqlCommand command = new(inIn, databaseConnection);
-                databaseConnection.Open();
-                SqlDataReader dr = command.ExecuteReader();
-                if (!dr.Read())
+                // Fixed: SQL injection vulnerability - using parameterized queries
+                try
                 {
-                    return true;
-                }
-                else
-                {
+                    string emailToLower = email.ToLower();
+                    string inIn = "SELECT e_mail FROM Customer WHERE e_mail = @email";
+                    using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                    using SqlCommand command = new(inIn, databaseConnection);
+                    command.Parameters.AddWithValue("@email", emailToLower);
 
-                    MessageBox.Show("Email already exists in database!");
+                    databaseConnection.Open();
+                    using SqlDataReader dr = command.ExecuteReader();
+
+                    if (!dr.Read())
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Email already exists in database!");
+                        return false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ERROR] Email validation failed: {ex.Message}");
+                    MessageBox.Show("Error validating email. Please try again.");
                     return false;
                 }
             }
@@ -131,20 +143,34 @@ namespace ToolHireSystem
             }
             if (eMailChk.IsMatch(email))
             {
-                string emailToLower = email.ToLower();
-                string inIn = "Select e_mail from Customer where cust_id != '" + cust + "'and e_mail='" + emailToLower + "'";
-                SqlConnection databaseConnection = new(DBConnect.oradb);
-                SqlCommand command = new(inIn, databaseConnection);
-                databaseConnection.Open();
-                SqlDataReader dr = command.ExecuteReader();
-                if (dr.Read())
+                // Fixed: SQL injection vulnerability - using parameterized queries
+                try
                 {
-                    MessageBox.Show("EMail already exists in database!");
-                    return false;
+                    string emailToLower = email.ToLower();
+                    string inIn = "SELECT e_mail FROM Customer WHERE cust_id != @cust AND e_mail = @email";
+                    using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                    using SqlCommand command = new(inIn, databaseConnection);
+                    command.Parameters.AddWithValue("@cust", cust);
+                    command.Parameters.AddWithValue("@email", emailToLower);
+
+                    databaseConnection.Open();
+                    using SqlDataReader dr = command.ExecuteReader();
+
+                    if (dr.Read())
+                    {
+                        MessageBox.Show("EMail already exists in database!");
+                        return false;
+                    }
+                    else
+                    {
+                        return true;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    return true;
+                    Console.WriteLine($"[ERROR] Email update validation failed: {ex.Message}");
+                    MessageBox.Show("Error validating email. Please try again.");
+                    return false;
                 }
             }
             else
@@ -164,18 +190,31 @@ namespace ToolHireSystem
             }
             if (phoneChk.IsMatch(phone))
             {
-                string inIn = "Select phone from Customer where phone = '" + phone + "'";
-                SqlConnection databaseConnection = new(DBConnect.oradb);
-                SqlCommand command = new(inIn, databaseConnection);
-                databaseConnection.Open();
-                SqlDataReader dr = command.ExecuteReader();
-                if (!dr.Read())
+                // Fixed: SQL injection vulnerability - using parameterized queries
+                try
                 {
-                    return true;
+                    string inIn = "SELECT phone FROM Customer WHERE phone = @phone";
+                    using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                    using SqlCommand command = new(inIn, databaseConnection);
+                    command.Parameters.AddWithValue("@phone", phone);
+
+                    databaseConnection.Open();
+                    using SqlDataReader dr = command.ExecuteReader();
+
+                    if (!dr.Read())
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Phone number already exists in database!");
+                        return false;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    MessageBox.Show("Phone number already exists in database!");
+                    Console.WriteLine($"[ERROR] Phone validation failed: {ex.Message}");
+                    MessageBox.Show("Error validating phone. Please try again.");
                     return false;
                 }
             }
@@ -196,19 +235,33 @@ namespace ToolHireSystem
             }
             if (phoneChk.IsMatch(phone))
             {
-                string inIn = "Select phone from Customer where cust_id != '" + cust + "'and phone='" + phone + "'";
-                SqlConnection databaseConnection = new(DBConnect.oradb);
-                SqlCommand command = new(inIn, databaseConnection);
-                databaseConnection.Open();
-                SqlDataReader dr = command.ExecuteReader();
-                if (dr.Read())
+                // Fixed: SQL injection vulnerability - using parameterized queries
+                try
                 {
-                    MessageBox.Show("Phone already exists in database!");
-                    return false;
+                    string inIn = "SELECT phone FROM Customer WHERE cust_id != @cust AND phone = @phone";
+                    using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                    using SqlCommand command = new(inIn, databaseConnection);
+                    command.Parameters.AddWithValue("@cust", cust);
+                    command.Parameters.AddWithValue("@phone", phone);
+
+                    databaseConnection.Open();
+                    using SqlDataReader dr = command.ExecuteReader();
+
+                    if (dr.Read())
+                    {
+                        MessageBox.Show("Phone already exists in database!");
+                        return false;
+                    }
+                    else
+                    {
+                        return true;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    return true;
+                    Console.WriteLine($"[ERROR] Phone update validation failed: {ex.Message}");
+                    MessageBox.Show("Error validating phone. Please try again.");
+                    return false;
                 }
             }
             else

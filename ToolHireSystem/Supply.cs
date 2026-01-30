@@ -39,155 +39,174 @@ namespace ToolHireSystem
 
         public static DataSet GetAllSupply(DataSet DS)
         {
+            // Fixed: Proper resource disposal with using statements
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+                string strSQL = "SELECT * FROM Supply";
 
+                using SqlCommand command = new(strSQL, databaseConnection);
+                using SqlDataAdapter da = new(command);
 
-            string strSQL = "SELECT * From Supply";
+                da.Fill(DS, "stk");
 
-
-            SqlCommand command = new(strSQL, databaseConnection);
-
-
-            SqlDataAdapter da = new(command);
-
-
-            da.Fill(DS, "stk");
-
-
-            databaseConnection.Close();
-
-
-            return DS;
-
+                return DS;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to get all supplies: {ex.Message}");
+                throw;
+            }
         }
 
 
         public static DataSet GetSuppType(DataSet DS, string type)
         {
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+                string strSQL = "SELECT * FROM Supply WHERE supply_type LIKE @type AND status = 'A'";
 
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@type", $"%{type ?? string.Empty}%");
 
-            string strSQL = "SELECT * From Supply where supply_type LIKE '%" + type + "%' AND status = 'A'";
+                using SqlDataAdapter da = new(command);
+                da.Fill(DS, "stk");
 
-
-            SqlCommand command = new(strSQL, databaseConnection);
-
-
-            SqlDataAdapter da = new(command);
-
-
-            da.Fill(DS, "stk");
-
-
-            databaseConnection.Close();
-
-
-            return DS;
+                return DS;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to get supplies by type: {ex.Message}");
+                throw;
+            }
         }
 
         public void RegSupply()
         {
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
+                string strSQL = "INSERT INTO Supply VALUES(@supply_id, @supply_type, @description, @price, @status)";
 
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@supply_id", supply_id);
+                command.Parameters.AddWithValue("@supply_type", supply_type ?? string.Empty);
+                command.Parameters.AddWithValue("@description", description ?? string.Empty);
+                command.Parameters.AddWithValue("@price", price);
+                command.Parameters.AddWithValue("@status", status ?? "A");
 
-            string strSQL = "INSERT INTO Supply Values(" + supply_id + ",'" + supply_type + "','" + description + "'," + price + ",'" + status + "')";
-
-
-            SqlCommand command = new(strSQL, databaseConnection);
-            command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
-
-
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to register supply: {ex.Message}");
+                throw;
+            }
         }
 
         public static int GetNextStockNo()
         {
-            int nextStockNo;
-
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
-
-            string strSQL = "SELECT MAX (supply_id) FROM Supply";
-            SqlCommand command = new(strSQL, databaseConnection);
-
-
-            SqlDataReader dr = command.ExecuteReader();
-
-
-            dr.Read();
-
-
-
-
-            if (dr.IsDBNull(0))
+            // Fixed: Proper resource disposal with using statements
+            try
             {
-                nextStockNo = 1;
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
+
+                string strSQL = "SELECT MAX(supply_id) FROM Supply";
+                using SqlCommand command = new(strSQL, databaseConnection);
+
+                using SqlDataReader dr = command.ExecuteReader();
+                dr.Read();
+
+                if (dr.IsDBNull(0))
+                {
+                    return 1;
+                }
+                else
+                {
+                    return Convert.ToInt32(dr.GetValue(0)) + 1;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                nextStockNo = Convert.ToInt32(dr.GetValue(0)) + 1;
+                Console.WriteLine($"[ERROR] Failed to get next stock number: {ex.Message}");
+                throw;
             }
-
-            databaseConnection.Close();
-
-            return nextStockNo;
-
         }
         public void UpdateSupply()
         {
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
+                string strSQL = "UPDATE Supply SET supply_type = @supply_type, description = @description, price = @price WHERE supply_id = @supply_id";
 
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@supply_type", supply_type ?? string.Empty);
+                command.Parameters.AddWithValue("@description", description ?? string.Empty);
+                command.Parameters.AddWithValue("@price", price);
+                command.Parameters.AddWithValue("@supply_id", supply_id);
 
-            string strSQL = "UPDATE Supply SET supply_type ='" + supply_type + "',description ='" + description + "',price =" + price + " WHERE supply_id =" + supply_id;
-
-
-            SqlCommand command = new(strSQL, databaseConnection);
-            command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to update supply: {ex.Message}");
+                throw;
+            }
         }
 
         public void RemoveSupp()
         {
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
+                string strSQL = "UPDATE Supply SET status = 'U' WHERE supply_id = @supply_id";
 
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@supply_id", supply_id);
 
-            string strSQL = "UPDATE Supply SET status ='U' WHERE supply_id =" + supply_id;
-
-
-            SqlCommand command = new(strSQL, databaseConnection);
-            command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to remove supply: {ex.Message}");
+                throw;
+            }
         }
 
         public static void UndoRemoveSupp(int id)
         {
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
+                string strSQL = "UPDATE Supply SET status = 'A' WHERE supply_id = @id";
 
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@id", id);
 
-            string strSQL = "UPDATE Supply SET status ='A' WHERE supply_id =" + id;
-
-
-            SqlCommand command = new(strSQL, databaseConnection);
-            command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to undo remove supply: {ex.Message}");
+                throw;
+            }
         }
     }
 }

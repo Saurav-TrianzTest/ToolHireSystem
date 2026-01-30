@@ -70,99 +70,126 @@ namespace ToolHireSystem
 
         public static int GetNextRentalItemsId()
         {
-            int nextRentalItemId;
-
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
-
-            string strSQL = "SELECT MAX (item_rental_id) FROM RentalItems";
-            SqlCommand command = new(strSQL, databaseConnection);
-
-            SqlDataReader dr = command.ExecuteReader();
-
-            dr.Read();
-
-            if (dr.IsDBNull(0))
+            // Fixed: Proper resource disposal with using statements
+            try
             {
-                nextRentalItemId = 1;
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
+
+                string strSQL = "SELECT MAX(item_rental_id) FROM RentalItems";
+                using SqlCommand command = new(strSQL, databaseConnection);
+
+                using SqlDataReader dr = command.ExecuteReader();
+                dr.Read();
+
+                if (dr.IsDBNull(0))
+                {
+                    return 1;
+                }
+                else
+                {
+                    return Convert.ToInt32(dr.GetValue(0)) + 1;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                nextRentalItemId = Convert.ToInt32(dr.GetValue(0)) + 1;
+                Console.WriteLine($"[ERROR] Failed to get next rental item ID: {ex.Message}");
+                throw;
             }
-
-            databaseConnection.Close();
-
-            return nextRentalItemId;
-
         }
         public void RegRentalItems()
         {
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            // Fixed: CURRENT_TIMESTAMP replaced with DateTime.UtcNow for cloud portability
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
+                string strSQL = "INSERT INTO RentalItems VALUES(@itemRentalId, @rentalId, @supplyId, @custId, @dateFrom, @dateTo, @price, @status)";
 
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@itemRentalId", itemRentalId);
+                command.Parameters.AddWithValue("@rentalId", rentalId);
+                command.Parameters.AddWithValue("@supplyId", supplyId);
+                command.Parameters.AddWithValue("@custId", custId);
+                command.Parameters.AddWithValue("@dateFrom", DateTime.UtcNow);
+                command.Parameters.AddWithValue("@dateTo", DateTime.UtcNow);
+                command.Parameters.AddWithValue("@price", price);
+                command.Parameters.AddWithValue("@status", status ?? "A");
 
-            string strSQL = "INSERT INTO RentalItems Values(" + itemRentalId + "," + rentalId + "," + supplyId + "," + custId + ",CURRENT_TIMESTAMP,CURRENT_TIMESTAMP," + price + ",'" + status + "')";
-
-
-            SqlCommand command = new(strSQL, databaseConnection);
-            command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to register rental item: {ex.Message}");
+                throw;
+            }
         }
         public static DataSet GetRentalItemsByLastName(DataSet DS, string lastname)
         {
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                string strSQL = "SELECT item_rental_id,rental_id,supply_id,cust_id,date_from,date_to,item_cost FROM rentalItems WHERE cust_id=(SELECT cust_id FROM customer WHERE last_name LIKE @lastname) AND status = 'A'";
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            string strSQL = "SELECT item_rental_id,rental_id,supply_id,cust_id,date_from,date_to,item_cost from rentalItems where cust_id=(select cust_id from customer where last_name like '%" + lastname + "%' )and status = 'A'";
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@lastname", $"%{lastname ?? string.Empty}%");
 
-            SqlCommand command = new(strSQL, databaseConnection);
+                using SqlDataAdapter da = new(command);
+                da.Fill(DS, "item");
 
-            SqlDataAdapter da = new(command);
-
-
-            da.Fill(DS, "item");
-
-
-            databaseConnection.Close();
-
-
-            return DS;
+                return DS;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to get rental items by last name: {ex.Message}");
+                throw;
+            }
         }
         public static DataSet GetRentalItemByCustId(DataSet DS, string id)
         {
-            Convert.ToInt32(id);
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                string strSQL = "SELECT item_rental_id,rental_id,supply_id,date_from,date_to,item_cost FROM rentalItems WHERE cust_id = @id AND status = 'A'";
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            string strSQL = "SELECT item_rental_id,rental_id,supply_id,date_from,date_to,item_cost from rentalItems where cust_id= " + id + "and status = 'A'";
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@id", Convert.ToInt32(id));
 
-            SqlCommand command = new(strSQL, databaseConnection);
+                using SqlDataAdapter da = new(command);
+                da.Fill(DS, "item");
 
-            SqlDataAdapter da = new(command);
-
-            da.Fill(DS, "item");
-
-            databaseConnection.Close();
-
-            return DS;
+                return DS;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to get rental items by customer ID: {ex.Message}");
+                throw;
+            }
         }
         public static void ReturnRentalItem(int rentalId)
         {
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
+                string strSQL = "UPDATE rentalItems SET Status = 'R' WHERE item_rental_Id = @rentalId";
 
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@rentalId", rentalId);
 
-            string strSQL = "UPDATE rentalItems SET Status ='R' WHERE item_rental_Id =" + rentalId;
-
-
-            SqlCommand command = new(strSQL, databaseConnection);
-            command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to return rental item: {ex.Message}");
+                throw;
+            }
         }
 
     }

@@ -27,75 +27,79 @@ namespace ToolHireSystem
         }
         public static int GetNextPaymentId()
         {
-            int nextPaymentId;
-
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
-
-            string strSQL = "SELECT MAX (payment_id) FROM Payments";
-            SqlCommand command = new(strSQL, databaseConnection);
-
-
-            SqlDataReader dr = command.ExecuteReader();
-
-
-            dr.Read();
-
-
-
-
-            if (dr.IsDBNull(0))
+            // Fixed: Proper resource disposal with using statements
+            try
             {
-                nextPaymentId = 1;
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
+
+                string strSQL = "SELECT MAX(payment_id) FROM Payments";
+                using SqlCommand command = new(strSQL, databaseConnection);
+
+                using SqlDataReader dr = command.ExecuteReader();
+                dr.Read();
+
+                if (dr.IsDBNull(0))
+                {
+                    return 1;
+                }
+                else
+                {
+                    return Convert.ToInt32(dr.GetValue(0)) + 1;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                nextPaymentId = Convert.ToInt32(dr.GetValue(0)) + 1;
+                Console.WriteLine($"[ERROR] Failed to get next payment ID: {ex.Message}");
+                throw;
             }
-
-            databaseConnection.Close();
-
-            return nextPaymentId;
-
         }
         public void RegPayment()
         {
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
+                string date = transDate.ToString("dd-MMM-yyyy");
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
-            string date = transDate.ToString("dd-MMM-yyyy");
+                string strSQL = "INSERT INTO Payments VALUES(@paymentId, @transactionId, @date, @amount)";
 
-            string strSQL = "INSERT INTO Payments Values(" + paymentId + "," + transactionId + ",'" + date + "'," + amount + ")";
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@paymentId", paymentId);
+                command.Parameters.AddWithValue("@transactionId", transactionId);
+                command.Parameters.AddWithValue("@date", date);
+                command.Parameters.AddWithValue("@amount", amount);
 
-
-            SqlCommand command = new(strSQL, databaseConnection);
-            command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to register payment: {ex.Message}");
+                throw;
+            }
         }
         public static DataSet GetPaymentByLastName(DataSet DS, string lastname)
         {
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                string strSQL = "SELECT * FROM Payments WHERE cust_id=(SELECT cust_id FROM customer WHERE last_name LIKE @lastname) AND status = 'A'";
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            string strSQL = "SELECT * from Payments where cust_id=(select cust_id from customer where last_name like '%" + lastname + "%' )and status = 'A'";
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@lastname", $"%{lastname ?? string.Empty}%");
 
+                using SqlDataAdapter da = new(command);
+                da.Fill(DS, "item");
 
-            SqlCommand command = new(strSQL, databaseConnection);
-
-
-
-
-            SqlDataAdapter da = new(command);
-
-
-            da.Fill(DS, "item");
-
-
-            databaseConnection.Close();
-
-
-            return DS;
+                return DS;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to get payments by last name: {ex.Message}");
+                throw;
+            }
         }
 
 

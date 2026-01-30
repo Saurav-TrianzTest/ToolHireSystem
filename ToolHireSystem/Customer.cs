@@ -37,132 +37,184 @@ namespace ToolHireSystem
         }
         public static decimal GetBalance(int id)
         {
-            decimal balance = 0;
-            Microsoft.Data.SqlClient.SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
-
-            string strSQL = "SELECT balance FROM Customer where cust_id =" + id;
-            SqlCommand command = new(strSQL, databaseConnection);
-
-
-            SqlDataReader dr = command.ExecuteReader();
-
-
-            if (dr.Read())
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            // Fixed: Proper resource disposal with using statements
+            try
             {
-                balance = dr.GetDecimal(0);
+                using Microsoft.Data.SqlClient.SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
+
+                string strSQL = "SELECT balance FROM Customer WHERE cust_id = @id";
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@id", id);
+
+                using SqlDataReader dr = command.ExecuteReader();
+
+                if (dr.Read())
+                {
+                    return dr.GetDecimal(0);
+                }
+                return 0;
             }
-            return balance;
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to get balance for customer {id}: {ex.Message}");
+                throw;
+            }
         }
 
         public static int GetNextCustId()
         {
-            int nextCustId;
-
-            Microsoft.Data.SqlClient.SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
-
-            string strSQL = "SELECT MAX (cust_id) FROM Customer";
-            SqlCommand command = new(strSQL, databaseConnection);
-
-            SqlDataReader dr = command.ExecuteReader();
-
-            dr.Read();
-
-            if (dr.IsDBNull(0))
+            // Fixed: Proper resource disposal with using statements
+            try
             {
-                nextCustId = 1;
+                using Microsoft.Data.SqlClient.SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
+
+                string strSQL = "SELECT MAX(cust_id) FROM Customer";
+                using SqlCommand command = new(strSQL, databaseConnection);
+
+                using SqlDataReader dr = command.ExecuteReader();
+                dr.Read();
+
+                if (dr.IsDBNull(0))
+                {
+                    return 1;
+                }
+                else
+                {
+                    return Convert.ToInt32(dr.GetValue(0)) + 1;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                nextCustId = Convert.ToInt32(dr.GetValue(0)) + 1;
+                Console.WriteLine($"[ERROR] Failed to get next customer ID: {ex.Message}");
+                throw;
             }
-
-            databaseConnection.Close();
-
-            return nextCustId;
         }
 
         public void RegCustomer()
         {
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            // Fixed: Proper resource disposal with using statements
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
+                string strSQL = "INSERT INTO Customer VALUES(@custId, @firstName, @lastName, @eMail, @phone, @balance, @status)";
 
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@custId", custId);
+                command.Parameters.AddWithValue("@firstName", firstName ?? string.Empty);
+                command.Parameters.AddWithValue("@lastName", lastName ?? string.Empty);
+                command.Parameters.AddWithValue("@eMail", eMail ?? string.Empty);
+                command.Parameters.AddWithValue("@phone", phone ?? string.Empty);
+                command.Parameters.AddWithValue("@balance", balance);
+                command.Parameters.AddWithValue("@status", status ?? "A");
 
-            string strSQL = "INSERT INTO Customer Values(" + custId + ",'" + firstName + "','" + lastName + "','" + eMail + "','" + phone + "'," + balance + ",'" + status + "')";
-
-
-            SqlCommand command = new(strSQL, databaseConnection);
-            command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to register customer: {ex.Message}");
+                throw;
+            }
         }
 
         public static DataSet GetCustomerByLastName(DataSet DS, string lastname)
         {
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            // Fixed: Proper resource disposal with using statements
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+                string strSQL = "SELECT cust_id,first_name,last_name,e_mail,phone,balance FROM Customer WHERE last_name LIKE @lastname AND account_status = 'A'";
 
-            string strSQL = "SELECT cust_id,first_name,last_name,e_mail,phone,balance From Customer where last_name LIKE '%" + lastname + "%' AND account_status = 'A'";
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@lastname", $"%{lastname ?? string.Empty}%");
 
-            SqlCommand command = new(strSQL, databaseConnection);
+                using SqlDataAdapter da = new(command);
+                da.Fill(DS, "cst");
 
-            SqlDataAdapter da = new(command);
-
-            da.Fill(DS, "cst");
-
-            databaseConnection.Close();
-
-            return DS;
+                return DS;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to get customers by last name: {ex.Message}");
+                throw;
+            }
         }
 
         public void UpdateCustomer()
         {
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
+                string strSQL = "UPDATE Customer SET first_name = @firstName, last_name = @lastName, e_mail = @eMail, phone = @phone WHERE cust_id = @custId";
 
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@firstName", firstName ?? string.Empty);
+                command.Parameters.AddWithValue("@lastName", lastName ?? string.Empty);
+                command.Parameters.AddWithValue("@eMail", eMail ?? string.Empty);
+                command.Parameters.AddWithValue("@phone", phone ?? string.Empty);
+                command.Parameters.AddWithValue("@custId", custId);
 
-            string strSQL = "UPDATE Customer SET first_name ='" + firstName + "',last_name ='" + lastName + "',e_mail ='" + eMail + "',phone='" + phone + "' WHERE cust_id =" + custId;
-
-
-            SqlCommand command = new(strSQL, databaseConnection);
-            command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to update customer: {ex.Message}");
+                throw;
+            }
         }
         public static void CloseCustomer(int id)
         {
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
+                string strSQL = "UPDATE Customer SET account_status = 'C' WHERE cust_id = @id";
 
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@id", id);
 
-            string strSQL = "UPDATE Customer SET account_status ='C' where cust_id=" + id;
-
-
-            SqlCommand command = new(strSQL, databaseConnection);
-            command.ExecuteNonQuery();
-
-            databaseConnection.Close();
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to close customer account: {ex.Message}");
+                throw;
+            }
         }
 
         public void UpdateCustomerBalance(decimal updatedBalance)
         {
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
+                string strSQL = "UPDATE Customer SET balance = balance + @updatedBalance WHERE cust_id = @custId";
 
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@updatedBalance", updatedBalance);
+                command.Parameters.AddWithValue("@custId", custId);
 
-            string strSQL = "UPDATE Customer SET balance =balance+" + updatedBalance + " WHERE cust_id =" + custId;
-
-            SqlCommand command = new(strSQL, databaseConnection);
-            command.ExecuteNonQuery();
-
-            databaseConnection.Close();
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to update customer balance: {ex.Message}");
+                throw;
+            }
         }
     }
 }

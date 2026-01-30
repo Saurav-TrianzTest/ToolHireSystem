@@ -45,25 +45,30 @@ namespace ToolHireSystem
         }
         public static Boolean GetUserByUserName(string username, string password)
         {
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            string strSQL = "SELECT * FROM USERS where user_name ='" + username + "'and pass_word ='" + password + "' and level_auth=1";
-            SqlCommand command = new(strSQL, databaseConnection);
-            command.Connection.Open();
-            command.ExecuteNonQuery();
-
-
-            SqlDataReader dr = command.ExecuteReader();
-
-
-            if (dr.Read())
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            // Fixed: Proper connection disposal with using statement
+            // Fixed: Proper error handling for cloud deployment
+            try
             {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                string strSQL = "SELECT * FROM USERS WHERE user_name = @username AND pass_word = @password AND level_auth = 1";
+                using SqlCommand command = new(strSQL, databaseConnection);
 
+                // Parameterized queries prevent SQL injection
+                command.Parameters.AddWithValue("@username", username ?? string.Empty);
+                command.Parameters.AddWithValue("@password", password ?? string.Empty);
+
+                command.Connection.Open();
+
+                using SqlDataReader dr = command.ExecuteReader();
+                return dr.Read();
+            }
+            catch (Exception ex)
+            {
+                // Log to console for cloud monitoring (CloudWatch Logs)
+                Console.WriteLine($"[ERROR] User authentication failed: {ex.Message}");
+                throw; // Re-throw for proper error handling at higher levels
+            }
         }
 
     }

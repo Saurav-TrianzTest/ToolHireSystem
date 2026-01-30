@@ -33,68 +33,77 @@ namespace ToolHireSystem
 
         public static int GetNextRentalId()
         {
-            int nextRentalId;
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
-            string strSQL = "SELECT MAX (rental_id) FROM Rentals";
-            SqlCommand command = new(strSQL, databaseConnection);
-
-            SqlDataReader dr = command.ExecuteReader();
-
-            dr.Read();
-
-
-            if (dr.IsDBNull(0))
+            // Fixed: Proper resource disposal with using statements
+            try
             {
-                nextRentalId = 1;
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
+                string strSQL = "SELECT MAX(rental_id) FROM Rentals";
+                using SqlCommand command = new(strSQL, databaseConnection);
+
+                using SqlDataReader dr = command.ExecuteReader();
+                dr.Read();
+
+                if (dr.IsDBNull(0))
+                {
+                    return 1;
+                }
+                else
+                {
+                    return Convert.ToInt32(dr.GetValue(0)) + 1;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                nextRentalId = Convert.ToInt32(dr.GetValue(0)) + 1;
+                Console.WriteLine($"[ERROR] Failed to get next rental ID: {ex.Message}");
+                throw;
             }
-
-            databaseConnection.Close();
-
-            return nextRentalId;
-
         }
 
         public static DataSet GetAllRentals(DataSet DS)
         {
+            // Fixed: Proper resource disposal with using statements
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+                string strSQL = "SELECT * FROM Rentals";
 
+                using SqlCommand command = new(strSQL, databaseConnection);
+                using SqlDataAdapter da = new(command);
 
-            string strSQL = "SELECT * From Rentals";
+                da.Fill(DS, "rtl");
 
-
-            SqlCommand command = new(strSQL, databaseConnection);
-
-
-            SqlDataAdapter da = new(command);
-
-
-            da.Fill(DS, "rtl");
-
-
-            databaseConnection.Close();
-
-
-            return DS;
-
+                return DS;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to get all rentals: {ex.Message}");
+                throw;
+            }
         }
 
         public void RegRental()
         {
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            databaseConnection.Open();
+            // Fixed: SQL injection vulnerability - using parameterized queries
+            try
+            {
+                using SqlConnection databaseConnection = new(DBConnect.GetConnectionString());
+                databaseConnection.Open();
 
-            string strSQL = "INSERT INTO Rentals Values(" + rentalId + "," + custId + ")";
+                string strSQL = "INSERT INTO Rentals VALUES(@rentalId, @custId)";
 
-            SqlCommand command = new(strSQL, databaseConnection);
-            command.ExecuteNonQuery();
+                using SqlCommand command = new(strSQL, databaseConnection);
+                command.Parameters.AddWithValue("@rentalId", rentalId);
+                command.Parameters.AddWithValue("@custId", custId);
 
-            databaseConnection.Close();
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to register rental: {ex.Message}");
+                throw;
+            }
         }
     }
 }
