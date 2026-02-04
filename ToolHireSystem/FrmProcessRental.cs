@@ -66,15 +66,14 @@ namespace ToolHireSystem
 
             grdData.Enabled = false;
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
 
-            string strSQL = "SELECT supply_type from SupplyType";
+            string strSQL = "SELECT supply_type FROM SupplyType";
 
             txtType.Items.Clear();
-            SqlCommand command = new(strSQL, databaseConnection);
-            SqlDataAdapter da = new(command);
-            command.ExecuteNonQuery();
+            using SqlCommand command = new(strSQL, databaseConnection);
+            using SqlDataAdapter da = new(command);
 
             DataTable dt = new();
             da.Fill(dt);
@@ -83,7 +82,6 @@ namespace ToolHireSystem
             {
                 txtType.Items.Add(d["supply_type"].ToString());
             }
-            databaseConnection.Close();
         }
 
         private void GrdDataSupply_CellClick(object sender, DataGridViewCellEventArgs e)

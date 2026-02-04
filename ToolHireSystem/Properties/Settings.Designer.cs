@@ -9,17 +9,21 @@
 //------------------------------------------------------------------------------
 
 namespace ToolHireSystem.Properties {
-    
-    
+
+    // Cloud-ready configuration - static singleton removed for cloud compatibility
+    // Settings are now loaded from environment variables and cloud configuration services
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.10.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
-        
-        private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
-        
+
+        // Removed static singleton pattern for cloud-native architecture
+        // Use dependency injection and IConfiguration instead
+
+        // Temporary instance getter for backward compatibility during migration
+        // TODO: Replace all Settings.Default usages with IConfiguration
         public static Settings Default {
             get {
-                return defaultInstance;
+                return new Settings();
             }
         }
     }

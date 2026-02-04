@@ -24,27 +24,22 @@ namespace ToolHireSystem
         {
             RemoveButton.Hide();
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
 
-            string strSQL = "SELECT supply_type from SupplyType";
-
+            string strSQL = "SELECT supply_type FROM SupplyType";
 
             txtSearch.Items.Clear();
-            SqlCommand command = new(strSQL, databaseConnection);
-            SqlDataAdapter da = new(command);
-            command.ExecuteNonQuery();
+            using SqlCommand command = new(strSQL, databaseConnection);
+            using SqlDataAdapter da = new(command);
 
             DataTable dt = new();
-            //SqlDataReader dr = command.ExecuteReader();
             da.Fill(dt);
 
             foreach (DataRow d in dt.Rows)
             {
                 txtSearch.Items.Add(d["supply_type"].ToString());
             }
-            databaseConnection.Close();
-
         }
 
         private void BtnBack_Click(object sender, EventArgs e)

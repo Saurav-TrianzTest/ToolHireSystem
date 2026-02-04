@@ -28,19 +28,15 @@ namespace ToolHireSystem
 
         private void BtnChart_Click(object sender, EventArgs e)
         {
-
-
-            string strSQL = "SELECT SUM(amount), MONTH(paydate) FROM payments WHERE (SELECT DATEPART(year, paydate)paydate) LIKE (SELECT DATEPART(year, CURRENT_TIMESTAMP)) GROUP BY MONTH(paydate)";
+            string strSQL = "SELECT SUM(amount), MONTH(paydate) FROM payments WHERE (SELECT DATEPART(year, paydate)) LIKE (SELECT DATEPART(year, CURRENT_TIMESTAMP)) GROUP BY MONTH(paydate)";
 
             DataTable dt = new();
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            SqlCommand command = new(strSQL, databaseConnection);
-            SqlDataAdapter da = new(command);
-
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlCommand command = new(strSQL, databaseConnection);
+            using SqlDataAdapter da = new(command);
 
             da.Fill(dt);
-            databaseConnection.Close();
 
             string[] N = new string[dt.Rows.Count];
             decimal[] M = new decimal[dt.Rows.Count];

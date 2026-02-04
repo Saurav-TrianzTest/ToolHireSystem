@@ -34,15 +34,13 @@ namespace ToolHireSystem
         public static int GetNextRentalId()
         {
             int nextRentalId;
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
-            string strSQL = "SELECT MAX (rental_id) FROM Rentals";
-            SqlCommand command = new(strSQL, databaseConnection);
+            string strSQL = "SELECT MAX(rental_id) FROM Rentals";
+            using SqlCommand command = new(strSQL, databaseConnection);
 
-            SqlDataReader dr = command.ExecuteReader();
-
+            using SqlDataReader dr = command.ExecuteReader();
             dr.Read();
-
 
             if (dr.IsDBNull(0))
             {
@@ -53,48 +51,35 @@ namespace ToolHireSystem
                 nextRentalId = Convert.ToInt32(dr.GetValue(0)) + 1;
             }
 
-            databaseConnection.Close();
-
             return nextRentalId;
-
         }
 
         public static DataSet GetAllRentals(DataSet DS)
         {
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            string strSQL = "SELECT * FROM Rentals";
 
-
-            string strSQL = "SELECT * From Rentals";
-
-
-            SqlCommand command = new(strSQL, databaseConnection);
-
-
-            SqlDataAdapter da = new(command);
-
+            using SqlCommand command = new(strSQL, databaseConnection);
+            using SqlDataAdapter da = new(command);
 
             da.Fill(DS, "rtl");
 
-
-            databaseConnection.Close();
-
-
             return DS;
-
         }
 
         public void RegRental()
         {
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
 
-            string strSQL = "INSERT INTO Rentals Values(" + rentalId + "," + custId + ")";
+            string strSQL = "INSERT INTO Rentals (rental_id, cust_id) VALUES (@RentalId, @CustId)";
 
-            SqlCommand command = new(strSQL, databaseConnection);
+            using SqlCommand command = new(strSQL, databaseConnection);
+            command.Parameters.AddWithValue("@RentalId", rentalId);
+            command.Parameters.AddWithValue("@CustId", custId);
+
             command.ExecuteNonQuery();
-
-            databaseConnection.Close();
         }
     }
 }

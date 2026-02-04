@@ -72,14 +72,13 @@ namespace ToolHireSystem
         {
             int nextRentalItemId;
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
 
-            string strSQL = "SELECT MAX (item_rental_id) FROM RentalItems";
-            SqlCommand command = new(strSQL, databaseConnection);
+            string strSQL = "SELECT MAX(item_rental_id) FROM RentalItems";
+            using SqlCommand command = new(strSQL, databaseConnection);
 
-            SqlDataReader dr = command.ExecuteReader();
-
+            using SqlDataReader dr = command.ExecuteReader();
             dr.Read();
 
             if (dr.IsDBNull(0))
@@ -91,78 +90,66 @@ namespace ToolHireSystem
                 nextRentalItemId = Convert.ToInt32(dr.GetValue(0)) + 1;
             }
 
-            databaseConnection.Close();
-
             return nextRentalItemId;
-
         }
         public void RegRentalItems()
         {
-
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
 
+            string strSQL = "INSERT INTO RentalItems (item_rental_id, rental_id, supply_id, cust_id, date_from, date_to, item_cost, status) VALUES (@ItemRentalId, @RentalId, @SupplyId, @CustId, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, @Price, @Status)";
 
-            string strSQL = "INSERT INTO RentalItems Values(" + itemRentalId + "," + rentalId + "," + supplyId + "," + custId + ",CURRENT_TIMESTAMP,CURRENT_TIMESTAMP," + price + ",'" + status + "')";
+            using SqlCommand command = new(strSQL, databaseConnection);
+            command.Parameters.AddWithValue("@ItemRentalId", itemRentalId);
+            command.Parameters.AddWithValue("@RentalId", rentalId);
+            command.Parameters.AddWithValue("@SupplyId", supplyId);
+            command.Parameters.AddWithValue("@CustId", custId);
+            command.Parameters.AddWithValue("@Price", price);
+            command.Parameters.AddWithValue("@Status", status);
 
-
-            SqlCommand command = new(strSQL, databaseConnection);
             command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
         }
         public static DataSet GetRentalItemsByLastName(DataSet DS, string lastname)
         {
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
+            string strSQL = "SELECT item_rental_id, rental_id, supply_id, cust_id, date_from, date_to, item_cost FROM rentalItems WHERE cust_id = (SELECT cust_id FROM customer WHERE last_name LIKE @LastName) AND status = 'A'";
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            string strSQL = "SELECT item_rental_id,rental_id,supply_id,cust_id,date_from,date_to,item_cost from rentalItems where cust_id=(select cust_id from customer where last_name like '%" + lastname + "%' )and status = 'A'";
+            using SqlCommand command = new(strSQL, databaseConnection);
+            command.Parameters.AddWithValue("@LastName", "%" + lastname + "%");
 
-            SqlCommand command = new(strSQL, databaseConnection);
-
-            SqlDataAdapter da = new(command);
-
+            using SqlDataAdapter da = new(command);
 
             da.Fill(DS, "item");
-
-
-            databaseConnection.Close();
-
 
             return DS;
         }
         public static DataSet GetRentalItemByCustId(DataSet DS, string id)
         {
-            Convert.ToInt32(id);
+            int custId = Convert.ToInt32(id);
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            string strSQL = "SELECT item_rental_id,rental_id,supply_id,date_from,date_to,item_cost from rentalItems where cust_id= " + id + "and status = 'A'";
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
+            string strSQL = "SELECT item_rental_id, rental_id, supply_id, date_from, date_to, item_cost FROM rentalItems WHERE cust_id = @CustId AND status = 'A'";
 
-            SqlCommand command = new(strSQL, databaseConnection);
+            using SqlCommand command = new(strSQL, databaseConnection);
+            command.Parameters.AddWithValue("@CustId", custId);
 
-            SqlDataAdapter da = new(command);
+            using SqlDataAdapter da = new(command);
 
             da.Fill(DS, "item");
-
-            databaseConnection.Close();
 
             return DS;
         }
         public static void ReturnRentalItem(int rentalId)
         {
-
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
 
+            string strSQL = "UPDATE rentalItems SET Status = 'R' WHERE item_rental_Id = @RentalId";
 
-            string strSQL = "UPDATE rentalItems SET Status ='R' WHERE item_rental_Id =" + rentalId;
+            using SqlCommand command = new(strSQL, databaseConnection);
+            command.Parameters.AddWithValue("@RentalId", rentalId);
 
-
-            SqlCommand command = new(strSQL, databaseConnection);
             command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
         }
 
     }

@@ -97,11 +97,12 @@ namespace ToolHireSystem
             if (eMailChk.IsMatch(email))
             {
                 string emailToLower = email.ToLower();
-                string inIn = "Select e_mail from Customer where e_mail = '" + emailToLower + "'";
-                SqlConnection databaseConnection = new(DBConnect.oradb);
-                SqlCommand command = new(inIn, databaseConnection);
+                string inIn = "SELECT e_mail FROM Customer WHERE e_mail = @Email";
+                using SqlConnection databaseConnection = new(DBConnect.oradb);
+                using SqlCommand command = new(inIn, databaseConnection);
+                command.Parameters.AddWithValue("@Email", emailToLower);
                 databaseConnection.Open();
-                SqlDataReader dr = command.ExecuteReader();
+                using SqlDataReader dr = command.ExecuteReader();
                 if (!dr.Read())
                 {
                     return true;
@@ -132,11 +133,13 @@ namespace ToolHireSystem
             if (eMailChk.IsMatch(email))
             {
                 string emailToLower = email.ToLower();
-                string inIn = "Select e_mail from Customer where cust_id != '" + cust + "'and e_mail='" + emailToLower + "'";
-                SqlConnection databaseConnection = new(DBConnect.oradb);
-                SqlCommand command = new(inIn, databaseConnection);
+                string inIn = "SELECT e_mail FROM Customer WHERE cust_id != @CustId AND e_mail = @Email";
+                using SqlConnection databaseConnection = new(DBConnect.oradb);
+                using SqlCommand command = new(inIn, databaseConnection);
+                command.Parameters.AddWithValue("@CustId", cust);
+                command.Parameters.AddWithValue("@Email", emailToLower);
                 databaseConnection.Open();
-                SqlDataReader dr = command.ExecuteReader();
+                using SqlDataReader dr = command.ExecuteReader();
                 if (dr.Read())
                 {
                     MessageBox.Show("EMail already exists in database!");
@@ -164,11 +167,12 @@ namespace ToolHireSystem
             }
             if (phoneChk.IsMatch(phone))
             {
-                string inIn = "Select phone from Customer where phone = '" + phone + "'";
-                SqlConnection databaseConnection = new(DBConnect.oradb);
-                SqlCommand command = new(inIn, databaseConnection);
+                string inIn = "SELECT phone FROM Customer WHERE phone = @Phone";
+                using SqlConnection databaseConnection = new(DBConnect.oradb);
+                using SqlCommand command = new(inIn, databaseConnection);
+                command.Parameters.AddWithValue("@Phone", phone);
                 databaseConnection.Open();
-                SqlDataReader dr = command.ExecuteReader();
+                using SqlDataReader dr = command.ExecuteReader();
                 if (!dr.Read())
                 {
                     return true;
@@ -196,11 +200,13 @@ namespace ToolHireSystem
             }
             if (phoneChk.IsMatch(phone))
             {
-                string inIn = "Select phone from Customer where cust_id != '" + cust + "'and phone='" + phone + "'";
-                SqlConnection databaseConnection = new(DBConnect.oradb);
-                SqlCommand command = new(inIn, databaseConnection);
+                string inIn = "SELECT phone FROM Customer WHERE cust_id != @CustId AND phone = @Phone";
+                using SqlConnection databaseConnection = new(DBConnect.oradb);
+                using SqlCommand command = new(inIn, databaseConnection);
+                command.Parameters.AddWithValue("@CustId", cust);
+                command.Parameters.AddWithValue("@Phone", phone);
                 databaseConnection.Open();
-                SqlDataReader dr = command.ExecuteReader();
+                using SqlDataReader dr = command.ExecuteReader();
                 if (dr.Read())
                 {
                     MessageBox.Show("Phone already exists in database!");

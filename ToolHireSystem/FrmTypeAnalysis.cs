@@ -26,16 +26,15 @@ namespace ToolHireSystem
 
         private void BtnChart_Click(object sender, EventArgs e)
         {
-            string strSQL = "select description, count(*) as count FROM(SELECT supply.supply_id,supplyType.description FROM ((rentalItems inner JOIN supply ON RentalItems.supply_id = Supply.supply_id) inner join supplytype On supply.supply_type = supplytype.supply_type)) as s group by s.description order by count";
+            string strSQL = "SELECT description, COUNT(*) AS count FROM (SELECT supply.supply_id, supplyType.description FROM ((rentalItems INNER JOIN supply ON RentalItems.supply_id = Supply.supply_id) INNER JOIN supplytype ON supply.supply_type = supplytype.supply_type)) AS s GROUP BY s.description ORDER BY count";
 
             DataTable dt = new();
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            SqlCommand command = new(strSQL, databaseConnection);
-            SqlDataAdapter da = new(command);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlCommand command = new(strSQL, databaseConnection);
+            using SqlDataAdapter da = new(command);
 
             da.Fill(dt);
-            databaseConnection.Close();
 
             int[] N = new int[dt.Rows.Count];
             string[] M = new string[dt.Rows.Count];

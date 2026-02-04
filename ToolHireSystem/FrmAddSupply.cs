@@ -58,26 +58,22 @@ namespace ToolHireSystem
         {
             TxtSupplyId.Text = Supply.GetNextStockNo().ToString("00000");
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
 
-            string strSQL = "SELECT supply_type from SupplyType";
-
+            string strSQL = "SELECT supply_type FROM SupplyType";
 
             TxtSupplyType.Items.Clear();
-            SqlCommand command = new(strSQL, databaseConnection);
-            SqlDataAdapter da = new(command);
-            command.ExecuteNonQuery();
+            using SqlCommand command = new(strSQL, databaseConnection);
+            using SqlDataAdapter da = new(command);
 
             DataTable dt = new();
-            //SqlDataReader dr = command.ExecuteReader();
             da.Fill(dt);
 
             foreach (DataRow d in dt.Rows)
             {
                 TxtSupplyType.Items.Add(d["supply_type"].ToString());
             }
-            databaseConnection.Close();
         }
 
         private void

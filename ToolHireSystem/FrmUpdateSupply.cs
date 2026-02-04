@@ -27,17 +27,14 @@ namespace ToolHireSystem
         {
             UpdateButton.Hide();
 
-
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
 
-            string strSQL = "SELECT supply_type from SupplyType";
-
+            string strSQL = "SELECT supply_type FROM SupplyType";
 
             TxtSupplyType.Items.Clear();
-            SqlCommand command = new(strSQL, databaseConnection);
-            SqlDataAdapter da = new(command);
-            command.ExecuteNonQuery();
+            using SqlCommand command = new(strSQL, databaseConnection);
+            using SqlDataAdapter da = new(command);
 
             DataTable dt = new();
             da.Fill(dt);
@@ -47,7 +44,6 @@ namespace ToolHireSystem
                 txtSearch.Items.Add(d["supply_type"].ToString());
                 TxtSupplyType.Items.Add(d["supply_type"].ToString());
             }
-            databaseConnection.Close();
         }
 
         private void BtnBack_Click(object sender, EventArgs e)

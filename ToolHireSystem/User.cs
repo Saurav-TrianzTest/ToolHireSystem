@@ -45,15 +45,15 @@ namespace ToolHireSystem
         }
         public static Boolean GetUserByUserName(string username, string password)
         {
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            string strSQL = "SELECT * FROM USERS where user_name ='" + username + "'and pass_word ='" + password + "' and level_auth=1";
-            SqlCommand command = new(strSQL, databaseConnection);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
+            string strSQL = "SELECT * FROM USERS WHERE user_name = @Username AND pass_word = @Password AND level_auth = 1";
+            using SqlCommand command = new(strSQL, databaseConnection);
+            command.Parameters.AddWithValue("@Username", username);
+            command.Parameters.AddWithValue("@Password", password);
+
             command.Connection.Open();
-            command.ExecuteNonQuery();
 
-
-            SqlDataReader dr = command.ExecuteReader();
-
+            using SqlDataReader dr = command.ExecuteReader();
 
             if (dr.Read())
             {
@@ -63,7 +63,6 @@ namespace ToolHireSystem
             {
                 return false;
             }
-
         }
 
     }

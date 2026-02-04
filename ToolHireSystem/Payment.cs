@@ -29,20 +29,14 @@ namespace ToolHireSystem
         {
             int nextPaymentId;
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
 
-            string strSQL = "SELECT MAX (payment_id) FROM Payments";
-            SqlCommand command = new(strSQL, databaseConnection);
+            string strSQL = "SELECT MAX(payment_id) FROM Payments";
+            using SqlCommand command = new(strSQL, databaseConnection);
 
-
-            SqlDataReader dr = command.ExecuteReader();
-
-
+            using SqlDataReader dr = command.ExecuteReader();
             dr.Read();
-
-
-
 
             if (dr.IsDBNull(0))
             {
@@ -53,47 +47,34 @@ namespace ToolHireSystem
                 nextPaymentId = Convert.ToInt32(dr.GetValue(0)) + 1;
             }
 
-            databaseConnection.Close();
-
             return nextPaymentId;
-
         }
         public void RegPayment()
         {
-
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
-            string date = transDate.ToString("dd-MMM-yyyy");
 
-            string strSQL = "INSERT INTO Payments Values(" + paymentId + "," + transactionId + ",'" + date + "'," + amount + ")";
+            string strSQL = "INSERT INTO Payments (payment_id, transaction_id, trans_date, amount) VALUES (@PaymentId, @TransactionId, @TransDate, @Amount)";
 
+            using SqlCommand command = new(strSQL, databaseConnection);
+            command.Parameters.AddWithValue("@PaymentId", paymentId);
+            command.Parameters.AddWithValue("@TransactionId", transactionId);
+            command.Parameters.AddWithValue("@TransDate", transDate);
+            command.Parameters.AddWithValue("@Amount", amount);
 
-            SqlCommand command = new(strSQL, databaseConnection);
             command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
         }
         public static DataSet GetPaymentByLastName(DataSet DS, string lastname)
         {
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
+            string strSQL = "SELECT * FROM Payments WHERE cust_id = (SELECT cust_id FROM customer WHERE last_name LIKE @LastName) AND status = 'A'";
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
-            string strSQL = "SELECT * from Payments where cust_id=(select cust_id from customer where last_name like '%" + lastname + "%' )and status = 'A'";
+            using SqlCommand command = new(strSQL, databaseConnection);
+            command.Parameters.AddWithValue("@LastName", "%" + lastname + "%");
 
-
-            SqlCommand command = new(strSQL, databaseConnection);
-
-
-
-
-            SqlDataAdapter da = new(command);
-
+            using SqlDataAdapter da = new(command);
 
             da.Fill(DS, "item");
-
-
-            databaseConnection.Close();
-
 
             return DS;
         }

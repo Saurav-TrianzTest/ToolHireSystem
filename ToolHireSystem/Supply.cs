@@ -39,91 +39,64 @@ namespace ToolHireSystem
 
         public static DataSet GetAllSupply(DataSet DS)
         {
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            string strSQL = "SELECT * FROM Supply";
 
-
-            string strSQL = "SELECT * From Supply";
-
-
-            SqlCommand command = new(strSQL, databaseConnection);
-
-
-            SqlDataAdapter da = new(command);
-
+            using SqlCommand command = new(strSQL, databaseConnection);
+            using SqlDataAdapter da = new(command);
 
             da.Fill(DS, "stk");
 
-
-            databaseConnection.Close();
-
-
             return DS;
-
         }
 
 
         public static DataSet GetSuppType(DataSet DS, string type)
         {
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            string strSQL = "SELECT * FROM Supply WHERE supply_type LIKE @Type AND status = 'A'";
 
+            using SqlCommand command = new(strSQL, databaseConnection);
+            command.Parameters.AddWithValue("@Type", "%" + type + "%");
 
-            string strSQL = "SELECT * From Supply where supply_type LIKE '%" + type + "%' AND status = 'A'";
-
-
-            SqlCommand command = new(strSQL, databaseConnection);
-
-
-            SqlDataAdapter da = new(command);
-
+            using SqlDataAdapter da = new(command);
 
             da.Fill(DS, "stk");
-
-
-            databaseConnection.Close();
-
 
             return DS;
         }
 
         public void RegSupply()
         {
-
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
 
+            string strSQL = "INSERT INTO Supply (supply_id, supply_type, description, price, status) VALUES (@SupplyId, @SupplyType, @Description, @Price, @Status)";
 
-            string strSQL = "INSERT INTO Supply Values(" + supply_id + ",'" + supply_type + "','" + description + "'," + price + ",'" + status + "')";
+            using SqlCommand command = new(strSQL, databaseConnection);
+            command.Parameters.AddWithValue("@SupplyId", supply_id);
+            command.Parameters.AddWithValue("@SupplyType", supply_type);
+            command.Parameters.AddWithValue("@Description", description);
+            command.Parameters.AddWithValue("@Price", price);
+            command.Parameters.AddWithValue("@Status", status);
 
-
-            SqlCommand command = new(strSQL, databaseConnection);
             command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
-
-
         }
 
         public static int GetNextStockNo()
         {
             int nextStockNo;
 
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
 
-            string strSQL = "SELECT MAX (supply_id) FROM Supply";
-            SqlCommand command = new(strSQL, databaseConnection);
+            string strSQL = "SELECT MAX(supply_id) FROM Supply";
+            using SqlCommand command = new(strSQL, databaseConnection);
 
-
-            SqlDataReader dr = command.ExecuteReader();
-
-
+            using SqlDataReader dr = command.ExecuteReader();
             dr.Read();
-
-
-
 
             if (dr.IsDBNull(0))
             {
@@ -134,60 +107,48 @@ namespace ToolHireSystem
                 nextStockNo = Convert.ToInt32(dr.GetValue(0)) + 1;
             }
 
-            databaseConnection.Close();
-
             return nextStockNo;
-
         }
         public void UpdateSupply()
         {
-
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
 
+            string strSQL = "UPDATE Supply SET supply_type = @SupplyType, description = @Description, price = @Price WHERE supply_id = @SupplyId";
 
-            string strSQL = "UPDATE Supply SET supply_type ='" + supply_type + "',description ='" + description + "',price =" + price + " WHERE supply_id =" + supply_id;
+            using SqlCommand command = new(strSQL, databaseConnection);
+            command.Parameters.AddWithValue("@SupplyType", supply_type);
+            command.Parameters.AddWithValue("@Description", description);
+            command.Parameters.AddWithValue("@Price", price);
+            command.Parameters.AddWithValue("@SupplyId", supply_id);
 
-
-            SqlCommand command = new(strSQL, databaseConnection);
             command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
         }
 
         public void RemoveSupp()
         {
-
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
 
+            string strSQL = "UPDATE Supply SET status = 'U' WHERE supply_id = @SupplyId";
 
-            string strSQL = "UPDATE Supply SET status ='U' WHERE supply_id =" + supply_id;
+            using SqlCommand command = new(strSQL, databaseConnection);
+            command.Parameters.AddWithValue("@SupplyId", supply_id);
 
-
-            SqlCommand command = new(strSQL, databaseConnection);
             command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
         }
 
         public static void UndoRemoveSupp(int id)
         {
-
-            SqlConnection databaseConnection = new(DBConnect.oradb);
+            using SqlConnection databaseConnection = new(DBConnect.oradb);
             databaseConnection.Open();
 
+            string strSQL = "UPDATE Supply SET status = 'A' WHERE supply_id = @SupplyId";
 
-            string strSQL = "UPDATE Supply SET status ='A' WHERE supply_id =" + id;
+            using SqlCommand command = new(strSQL, databaseConnection);
+            command.Parameters.AddWithValue("@SupplyId", id);
 
-
-            SqlCommand command = new(strSQL, databaseConnection);
             command.ExecuteNonQuery();
-
-
-            databaseConnection.Close();
         }
     }
 }
