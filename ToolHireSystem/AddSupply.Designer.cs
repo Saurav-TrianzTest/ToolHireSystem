@@ -1,9 +1,4 @@
-﻿namespace ToolHireSystem
-{
-    partial class WeldSys
-    {
-        /// <summary>
-        /// Required designer variable.
+    partial class AddSupply
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
@@ -139,30 +134,14 @@
             this.AddSuppBtn.Size = new System.Drawing.Size(203, 60);
             this.AddSuppBtn.TabIndex = 9;
             this.AddSuppBtn.Text = "Add Supply";
-            this.AddSuppBtn.UseVisualStyleBackColor = true;
-            this.AddSuppBtn.Click += new System.EventHandler(this.AddSuppBtn_Click);
-            // 
-            // WeldSys
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            // AddSupply
             this.ClientSize = new System.Drawing.Size(306, 333);
             this.Controls.Add(this.AddSuppBtn);
             this.Controls.Add(this.Quantity);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.Price);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.Description);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.SupplyType);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.menuStrip1);
-            this.MainMenuStrip = this.menuStrip1;
-            this.Name = "WeldSys";
-            this.Text = "WeldSys";
-            this.menuStrip1.ResumeLayout(false);
-            this.menuStrip1.PerformLayout();
-            this.ResumeLayout(false);
+            // AddSupply
             this.PerformLayout();
 
         }
@@ -171,14 +150,8 @@
 
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem Menu;
-        private System.Windows.Forms.ToolStripMenuItem backToolStripMenuItem;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox SupplyType;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox Description;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox Price;
-        private System.Windows.Forms.Label label4;
+            this.Name = "AddSupply";
+            this.Text = "Add Supply";
         private System.Windows.Forms.TextBox Quantity;
         private System.Windows.Forms.Button AddSuppBtn;
     }

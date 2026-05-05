@@ -3,9 +3,9 @@ using System.Windows.Forms;
 
 namespace ToolHireSystem
 {
-    public partial class WeldSys : Form
+    public partial class AddSupply : Form
     {
-        public WeldSys()
+        public AddSupply()
         {
             InitializeComponent();
         }
@@ -35,7 +35,6 @@ namespace ToolHireSystem
                 Quantity.Clear();
                 SupplyType.Focus();
             }
-
         }
     }
 }
